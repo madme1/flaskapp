@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved Images</title>
+  <link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='saved_image.css') }}"
+/>
+</head>
+<body>
+  <div class="step-container">
+    <h3>Image Download Process</h3>
+    
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+      <div class="step-indicator-item active" data-step="1">
+        <span>Enter Details</span>
+      </div>
+      <div class="step-indicator-item" data-step="2">
+        <span>Select & Download</span>
+      </div>
+    </div>
+    
+    <!-- Step 1: Enter Details -->
+    <div class="step step1 active">
+      <div id="editForm">
+        <h2>Enter Your Details</h2>
+        <input type="text" id="editName" placeholder="Name" required>
+        <input type="text" id="editMobile" placeholder="Mobile" required>
+        <input type="text" id="editMahaRara" placeholder="Maha Rara No." required>
+        <input type="file" id="editLogoUpload" accept="image/*">
+      </div>
+      
+      <div class="nav-buttons">
+        <button class="nav-next">Next</button>
+      </div>
+    </div>
+    
+    <!-- Step 2: Select Image -->
+    <div class="step step2">
+      <h2>Select an Image to Download</h2>
+      <div class="image-container" id="savedImagesContainer">
+        <!-- Saved images will be dynamically loaded here -->
+      </div>
+      
+      <div class="nav-buttons">
+        <button class="nav-prev">Previous</button>
+        <button class="nav-download" disabled>Download Selected Image</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const steps = document.querySelectorAll('.step');
+      const stepIndicators = document.querySelectorAll('.step-indicator-item');
+      const prevBtn = document.querySelector('.nav-prev');
+      const nextBtn = document.querySelector('.nav-next');
+      const downloadBtn = document.querySelector('.nav-download');
+      let currentStep = 1;
+      let selectedImageId = null;
+      
+      // Initialize the form
+      updateStepVisibility();
+      
+      // Next button click handler
+      nextBtn.addEventListener('click', function() {
+        // Validate step 1 fields before proceeding
+        if (currentStep === 1) {
+          const name = document.getElementById('editName').value;
+          const mobile = document.getElementById('editMobile').value;
+          const mahaRaraNo = document.getElementById('editMahaRara').value;
+          
+          if (!name || !mobile || !mahaRaraNo) {
+            alert('Please enter all required fields: name, mobile number, and Maha Rara No.');
+            return;
+          }
+          
+          // Load images for step 2
+          fetchSavedImages();
+        }
+        
+        if (currentStep < steps.length) {
+          currentStep++;
+          updateStepVisibility();
+        }
+      });
+      
+      // Previous button click handler
+      prevBtn.addEventListener('click', function() {
+        if (currentStep > 1) {
+          currentStep--;
+          updateStepVisibility();
+        }
+      });
+      
+      // Download button click handler
+      downloadBtn.addEventListener('click', async function() {
+        if (!selectedImageId) {
+          alert('Please select an image to download');
+          return;
+        }
+        
+        const name = document.getElementById('editName').value;
+        const mobile = document.getElementById('editMobile').value;
+        const mahaRaraNo = document.getElementById('editMahaRara').value;
+        const logoFile = document.getElementById('editLogoUpload').files[0];
+        
+        let logoData = null;
+        if (logoFile) {
+          logoData = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(logoFile);
+          });
+        }
+        
+        // Send data to backend to edit and download the image
+        try {
+          const response = await fetch(`/edit/${selectedImageId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: name,
+              mobile: mobile,
+              maha_rara_no: mahaRaraNo,
+              logo: logoData,
+            }),
+          });
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            // Create a link and trigger the download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'edited_image.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            console.log('Image downloaded successfully');
+          } else {
+            const error = await response.text();
+            console.error('Backend error:', error);
+            alert('Error processing image. Check console for details.');
+          }
+        } catch (error) {
+          console.error('Network error:', error);
+          alert('Network error. Check console for details.');
+        }
+      });
+      
+      // Update step visibility and button states
+      function updateStepVisibility() {
+        steps.forEach((step, index) => {
+          if (index + 1 === currentStep) {
+            step.classList.add('active');
+          } else {
+            step.classList.remove('active');
+          }
+        });
+        
+        stepIndicators.forEach((indicator, index) => {
+          indicator.classList.remove('active');
+          if (index + 1 === currentStep) {
+            indicator.classList.add('active');
+          }
+        });
+        
+        prevBtn.style.display = currentStep === 1 ? 'none' : 'block';
+        nextBtn.style.display = currentStep === steps.length ? 'none' : 'block';
+        downloadBtn.style.display = currentStep === steps.length ? 'block' : 'none';
+      }
+      
+      // Fetch saved images from the backend
+      async function fetchSavedImages() {
+        try {
+          const response = await fetch('/get_saved_images');
+          if (response.ok) {
+            const savedImages = await response.json();
+            const container = document.getElementById('savedImagesContainer');
+            container.innerHTML = ''; // Clear existing content
+            
+            savedImages.forEach(img => {
+              const imgElement = document.createElement('img');
+              imgElement.src = img.image;
+              imgElement.dataset.id = img.id;
+              
+              imgElement.addEventListener('click', function() {
+                // Remove selection from all images
+                document.querySelectorAll('.image-container img').forEach(img => {
+                  img.classList.remove('selected');
+                });
+                
+                // Select this image
+                this.classList.add('selected');
+                selectedImageId = this.dataset.id;
+                downloadBtn.disabled = false;
+              });
+              
+              container.appendChild(imgElement);
+            });
+          } else {
+            const error = await response.text();
+            console.error('Backend error:', error);
+            alert('Error fetching saved images. Check console for details.');
+          }
+        } catch (error) {
+          console.error('Network error:', error);
+          alert('Network error. Check console for details.');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

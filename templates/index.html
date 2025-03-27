@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Text Overlay</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <div class="step-container">
+      <!-- Step Indicator -->
+      <div class="step-indicator">
+          <div class="step-indicator-item active" data-step="1">
+              <span>Step 1</span>
+          </div>
+          <div class="step-indicator-item" data-step="2">
+              <span>Step 2</span>
+          </div>
+          <div class="step-indicator-item" data-step="3">
+              <span>Step 3</span>
+          </div>
+          <div class="step-indicator-item" data-step="4">
+              <span>Step 4</span>
+          </div>
+      </div>
+
+    <div class="container">
+      <div class="cursor-line-horizontal" id="cursor-line-horizontal"></div>
+      <div class="cursor-line-vertical" id="cursor-line-vertical"></div>
+      <div class="right">
+        <div class="image-container">
+          <img
+            id="uploadedImage"
+            src="#"
+            alt="Uploaded Image"
+            style="display: none"
+          />
+          <canvas id="previewCanvas" style="display: none"></canvas>
+        </div>
+      </div>
+      <div class="left">
+        <div class="nav-buttons">
+          <button class="nav-prev" disabled>Previous</button>
+          <button class="nav-next">Next</button>
+      </div>
+        <div class="step step1 active">
+        <label for="imageUpload">Upload an Image</label>
+        <input type="file" id="imageUpload" accept="image/*" />
+        <br />
+        <label for="logoUpload">Upload an logo</label>
+
+        <input type="file" id="logoUpload" accept="image/*" />
+      </div>
+      <div class="step step2">
+        <div class="controls">
+          <label for="name">Name:</label>
+          <input
+            type="text"
+            id="name"
+            placeholder="Enter your name"
+            value="Mr. Krishna"
+          />
+
+          <label for="mobile">Mobile:</label>
+          <input
+            type="text"
+            id="mobile"
+            placeholder="Enter your mobile number"
+            value="1234567890"
+          />
+
+          <label for="maha_rara_no">Maha Rara No.:</label>
+          <input
+            type="text"
+            id="maha_rara_no"
+            placeholder="Enter Maha Rara No."
+            value="A987654321"
+          />
+        </div>
+      </div>
+        <div class="step step3">
+          <div>
+            <!-- Add these input fields to your HTML -->
+            <label for="fontSizeNameMobile">Font Size (Name & Mobile):</label>
+            <input type="number" id="fontSizeNameMobile" value="20" />
+
+            <label for="fontSizeMahaRara">Font Size (Maha Rara):</label>
+            <input type="number" id="fontSizeMahaRara" value="20" />
+
+            <label for="fontFamily">Font Family:</label>
+            <select id="fontFamily">
+              <option value="fonts/Arial.ttf">Arial</option>
+              <option value="fonts/Roboto-Regular.ttf">Roboto</option>
+              <option value="fonts/GreatVibes-Regular.ttf">
+                GreatVibes-Regular
+              </option>
+            </select>
+
+            <label for="fontColor">Font Color:</label>
+            <input type="color" id="fontColor" value="#000000" />
+          </div>
+        </div>
+        <div class="step step4">
+          <div class="position-controls">
+            <button id="selectLogoPosition">Select Logo Position</button>
+            <button id="selectNameMobilePosition">
+              Select Name + Mobile Position
+            </button>
+            <button id="selectMahaRaraPosition">
+              Select Maha Rara Position
+            </button>
+            <button id="resetPositions">Reset Positions</button>
+
+            <button id="resetLogoPosition">Reset Logo Position</button>
+            <button id="resetNameMobilePosition">
+              Reset Name + Mobile Position
+            </button>
+            <button id="resetMahaRaraPosition">Reset Maha Rara Position</button>
+          </div>
+
+          <div id="positionDisplay">
+            <h3>Selected Positions</h3>
+            <div>
+              <strong>Logo Position:</strong>
+              <span id="logoPositionDisplay">(0, 0)</span>
+              <button id="logoUp">↑</button>
+              <button id="logoDown">↓</button>
+              <button id="logoLeft">←</button>
+              <button id="logoRight">→</button>
+            </div>
+            <div>
+              <strong>Name + Mobile Position:</strong>
+              <span id="nameMobilePositionDisplay">(0, 0)</span>
+              <button id="nameMobileUp">↑</button>
+              <button id="nameMobileDown">↓</button>
+              <button id="nameMobileLeft">←</button>
+              <button id="nameMobileRight">→</button>
+            </div>
+            <div>
+              <strong>Maha Rara Position:</strong>
+              <span id="mahaRaraPositionDisplay">(0, 0)</span>
+              <button id="mahaRaraUp">↑</button>
+              <button id="mahaRaraDown">↓</button>
+              <button id="mahaRaraLeft">←</button>
+              <button id="mahaRaraRight">→</button>
+            </div>
+          </div>
+        </div>
+   
+          <!-- <button id="previewButton">Preview Text</button> -->
+           <div class="finalstep">
+     
+          <button id="confirmButton" disabled>Confirm and Download</button>
+          <button id="confirmSaveButton" disabled>Confirm and Save</button>
+        </div>
+        </div>
+      </div>
+
+    <a href="/saved_images">View Saved Images</a>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+  </body>
+</html>
