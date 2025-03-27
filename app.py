@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from PIL import Image, ImageDraw, ImageFont
 import io
 import base64
-import logging
 import json
 
 app = Flask(__name__)
@@ -14,7 +13,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # Enable logging
-logging.basicConfig(level=logging.CRITICAL)
+# logging.basicConfig(level=logging.DEBUG)
 
 # Database model
 class ImageData(db.Model):
@@ -59,7 +58,7 @@ def add_elements_to_image(
             font_name_mobile = ImageFont.truetype(font_family, font_size_name_mobile)
             font_maha_rara = ImageFont.truetype(font_family, font_size_maha_rara)
         except Exception as e:
-            logging.error(f"Error loading font: {e}")
+            # logging.error(f"Error loading font: {e}")
             # Fallback to default font
             font_name_mobile = ImageFont.load_default()
             font_maha_rara = ImageFont.load_default()
@@ -71,9 +70,10 @@ def add_elements_to_image(
             logo_y = int(logo_position['y'])
             if (logo_x + logo.width <= image.width and logo_y + logo.height <= image.height):
                 image.paste(logo, (logo_x, logo_y), logo)  # Use logo as mask for transparency
-                logging.debug(f"Logo pasted at position: ({logo_x}, {logo_y})")
+                # logging.debug(f"Logo pasted at position: ({logo_x}, {logo_y})")
             else:
-                logging.warning("Logo position is outside the image boundaries.")
+                # logging.warning("Logo position is outside the image boundaries.")
+                pass
 
         # Add name and mobile number at the specified position
         name_mobile_position = positions['name_mobile']
@@ -81,7 +81,7 @@ def add_elements_to_image(
         name_mobile_y = int(name_mobile_position['y'])
         name_mobile_text = f"{mobile}"
         draw.text((name_mobile_x, name_mobile_y), name_mobile_text, fill=font_color, font=font_name_mobile)
-        logging.debug(f"Name and mobile added at position: ({name_mobile_x}, {name_mobile_y})")
+        # logging.debug(f"Name and mobile added at position: ({name_mobile_x}, {name_mobile_y})")
 
         # Add Maha Rara No. at the specified position
         maha_rara_position = positions['maha_rara']
@@ -96,11 +96,11 @@ def add_elements_to_image(
         buffer.seek(0)
 
         # Log success
-        logging.debug("Elements added to image successfully")
+        # logging.debug("Elements added to image successfully")
 
         return buffer
     except Exception as e:
-        logging.error(f"Error in add_elements_to_image: {e}")
+        # logging.error(f"Error in add_elements_to_image: {e}")
         raise
 
 @app.route('/')
@@ -142,7 +142,7 @@ def preview():
         # Return the edited image as a response
         return send_file(buffer, mimetype='image/png')
     except Exception as e:
-        logging.error(f"Error in /preview: {e}")
+        # logging.error(f"Error in /preview: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/add_text', methods=['POST'])
@@ -176,7 +176,7 @@ def add_text():
         # Return the edited image as a response
         return send_file(buffer, mimetype='image/png', as_attachment=True, download_name='edited_image.png')
     except Exception as e:
-        logging.error(f"Error in /add_text: {e}")
+        # logging.error(f"Error in /add_text: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/save', methods=['POST'])
@@ -213,7 +213,7 @@ def save():
         return jsonify({"message": "Data saved successfully", "id": new_image_data.id}), 200
     except Exception as e:
         db.session.rollback()
-        logging.error(f"Error in /save: {e}")
+        # logging.error(f"Error in /save: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -239,8 +239,9 @@ def get_saved_images():
 
         return jsonify(saved_images_data), 200
     except Exception as e:
-        logging.error(f"Error in /get_saved_images: {e}")
+        # logging.error(f"Error in /get_saved_images: {e}")
         return jsonify({"error": str(e)}), 500
+
 @app.route('/edit/<int:image_id>', methods=['POST'])
 def edit(image_id):
     data = request.json
@@ -278,7 +279,7 @@ def edit(image_id):
         # Return the edited image as a response
         return send_file(buffer, mimetype='image/png')
     except Exception as e:
-        logging.error(f"Error in /edit: {e}")
+        # logging.error(f"Error in /edit: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
