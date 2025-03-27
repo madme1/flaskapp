@@ -8,6 +8,36 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='saved_image.css') }}"
 />
+  <style>
+    /* Add these styles for the progress bar */
+    .progress-container {
+      display: none;
+      width: 100%;
+      margin: 20px 0;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background-color: #f0f0f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .progress {
+      height: 100%;
+      background-color: #4CAF50;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+      text-align: center;
+      margin-top: 5px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
   <div class="step-container">
@@ -45,6 +75,14 @@
         <!-- Saved images will be dynamically loaded here -->
       </div>
       
+      <!-- Progress bar container -->
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar">
+          <div class="progress" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+      </div>
+      
       <div class="nav-buttons">
         <button class="nav-prev">Previous</button>
         <button class="nav-download" disabled>Download Selected Image</button>
@@ -59,6 +97,10 @@
       const prevBtn = document.querySelector('.nav-prev');
       const nextBtn = document.querySelector('.nav-next');
       const downloadBtn = document.querySelector('.nav-download');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      
       let currentStep = 1;
       let selectedImageId = null;
       
@@ -108,6 +150,21 @@
         const mahaRaraNo = document.getElementById('editMahaRara').value;
         const logoFile = document.getElementById('editLogoUpload').files[0];
         
+        // Show progress bar
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressText.textContent = '0%';
+        downloadBtn.disabled = true;
+        
+        // Create progress event handler
+        const progressHandler = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            progressBar.style.width = `${percentComplete}%`;
+            progressText.textContent = `${Math.round(percentComplete)}%`;
+          }
+        };
+        
         let logoData = null;
         if (logoFile) {
           logoData = await new Promise((resolve) => {
@@ -119,38 +176,62 @@
         
         // Send data to backend to edit and download the image
         try {
-          const response = await fetch(`/edit/${selectedImageId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: name,
-              mobile: mobile,
-              maha_rara_no: mahaRaraNo,
-              logo: logoData,
-            }),
-          });
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', `/edit/${selectedImageId}`, true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
           
-          if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            
-            // Create a link and trigger the download
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'edited_image.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            console.log('Image downloaded successfully');
-          } else {
-            const error = await response.text();
-            console.error('Backend error:', error);
-            alert('Error processing image. Check console for details.');
-          }
+          // Track upload progress
+          xhr.upload.addEventListener('progress', progressHandler);
+          
+          xhr.onload = function() {
+            if (xhr.status === 200) {
+              progressBar.style.width = '100%';
+              progressText.textContent = '100%';
+              
+              // Create a download link for the response
+              const blob = new Blob([xhr.response], { type: 'image/png' });
+              const url = window.URL.createObjectURL(blob);
+              
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'edited_image.png';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              
+              // Reset progress after a short delay
+              setTimeout(() => {
+                progressContainer.style.display = 'none';
+                downloadBtn.disabled = false;
+              }, 1000);
+            } else {
+              console.error('Backend error:', xhr.responseText);
+              alert('Error processing image. Check console for details.');
+              progressContainer.style.display = 'none';
+              downloadBtn.disabled = false;
+            }
+          };
+          
+          xhr.onerror = function() {
+            console.error('Network error');
+            alert('Network error. Check console for details.');
+            progressContainer.style.display = 'none';
+            downloadBtn.disabled = false;
+          };
+          
+          xhr.responseType = 'arraybuffer';
+          xhr.send(JSON.stringify({
+            name: name,
+            mobile: mobile,
+            maha_rara_no: mahaRaraNo,
+            logo: logoData,
+          }));
+          
         } catch (error) {
-          console.error('Network error:', error);
-          alert('Network error. Check console for details.');
+          console.error('Error:', error);
+          alert('An error occurred. Check console for details.');
+          progressContainer.style.display = 'none';
+          downloadBtn.disabled = false;
         }
       });
       
