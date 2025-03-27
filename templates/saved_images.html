@@ -103,6 +103,7 @@
       
       let currentStep = 1;
       let selectedImageId = null;
+      let progressInterval;
       
       // Initialize the form
       updateStepVisibility();
@@ -150,20 +151,19 @@
         const mahaRaraNo = document.getElementById('editMahaRara').value;
         const logoFile = document.getElementById('editLogoUpload').files[0];
         
-        // Show progress bar
+        // Show progress bar and start at 100%
         progressContainer.style.display = 'block';
-        progressBar.style.width = '0%';
-        progressText.textContent = '0%';
+        progressBar.style.width = '100%';
+        progressText.textContent = 'Processing...';
         downloadBtn.disabled = true;
         
-        // Create progress event handler
-        const progressHandler = (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = (event.loaded / event.total) * 100;
-            progressBar.style.width = `${percentComplete}%`;
-            progressText.textContent = `${Math.round(percentComplete)}%`;
-          }
-        };
+        // Start the progress animation (100% to 50%)
+        let progress = 100;
+        progressInterval = setInterval(() => {
+          progress = Math.max(50, progress - 1);
+          progressBar.style.width = `${progress}%`;
+          progressText.textContent = `Processing... ${progress}%`;
+        }, 100);
         
         let logoData = null;
         if (logoFile) {
@@ -180,13 +180,12 @@
           xhr.open('POST', `/edit/${selectedImageId}`, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
           
-          // Track upload progress
-          xhr.upload.addEventListener('progress', progressHandler);
-          
           xhr.onload = function() {
+            clearInterval(progressInterval);
             if (xhr.status === 200) {
+              // Complete the progress bar
               progressBar.style.width = '100%';
-              progressText.textContent = '100%';
+              progressText.textContent = 'Download complete!';
               
               // Create a download link for the response
               const blob = new Blob([xhr.response], { type: 'image/png' });
@@ -203,20 +202,35 @@
               setTimeout(() => {
                 progressContainer.style.display = 'none';
                 downloadBtn.disabled = false;
-              }, 1000);
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+              }, 2000);
             } else {
               console.error('Backend error:', xhr.responseText);
-              alert('Error processing image. Check console for details.');
-              progressContainer.style.display = 'none';
-              downloadBtn.disabled = false;
+              progressBar.style.backgroundColor = '#f44336';
+              progressText.textContent = 'Error processing image';
+              setTimeout(() => {
+                progressContainer.style.display = 'none';
+                downloadBtn.disabled = false;
+                progressBar.style.backgroundColor = '#4CAF50';
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+              }, 2000);
             }
           };
           
           xhr.onerror = function() {
+            clearInterval(progressInterval);
             console.error('Network error');
-            alert('Network error. Check console for details.');
-            progressContainer.style.display = 'none';
-            downloadBtn.disabled = false;
+            progressBar.style.backgroundColor = '#f44336';
+            progressText.textContent = 'Network error';
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+              downloadBtn.disabled = false;
+              progressBar.style.backgroundColor = '#4CAF50';
+              progressBar.style.width = '0%';
+              progressText.textContent = '0%';
+            }, 2000);
           };
           
           xhr.responseType = 'arraybuffer';
@@ -228,10 +242,17 @@
           }));
           
         } catch (error) {
+          clearInterval(progressInterval);
           console.error('Error:', error);
-          alert('An error occurred. Check console for details.');
-          progressContainer.style.display = 'none';
-          downloadBtn.disabled = false;
+          progressBar.style.backgroundColor = '#f44336';
+          progressText.textContent = 'Error occurred';
+          setTimeout(() => {
+            progressContainer.style.display = 'none';
+            downloadBtn.disabled = false;
+            progressBar.style.backgroundColor = '#4CAF50';
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+          }, 2000);
         }
       });
       
