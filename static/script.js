@@ -114,20 +114,7 @@ selectMahaRaraPosition.addEventListener('click', () => {
   document.getElementById('cursor-line-vertical').style.display = 'block';
 });
 
-// Reset all positions
-resetPositions.addEventListener('click', () => {
-  selectedPositions = {
-    logo: { x: 0, y: 0 },
-    name_mobile: { x: 0, y: 0 },
-    maha_rara: { x: 0, y: 0 }
-  };
-  selectedElement = null;
-  previewCanvas.src = '';
-  uploadedImage.style.display = 'flex';
-  previewCanvas.style.display = 'none';
-  console.log('All positions reset.');
-  checkButtonState(); // Check if the button should be enabled
-});
+
 
 // Check if the Confirm and Download button should be enabled
 function checkButtonState() {
@@ -572,4 +559,26 @@ document.addEventListener('DOMContentLoaded', function() {
           }
       });
   }
+});
+
+
+
+document.querySelectorAll('.next-step').forEach(button => {
+  button.addEventListener('click', function() {
+    const currentStep = this.closest('.position-step');
+    const nextStepId = this.getAttribute('data-next');
+    
+    currentStep.style.display = 'none';
+    document.getElementById(nextStepId).style.display = 'block';
+  });
+});
+
+document.querySelectorAll('.prev-step').forEach(button => {
+  button.addEventListener('click', function() {
+    const currentStep = this.closest('.position-step');
+    const prevStepId = this.getAttribute('data-prev');
+    
+    currentStep.style.display = 'none';
+    document.getElementById(prevStepId).style.display = 'block';
+  });
 });
