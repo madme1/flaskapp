@@ -42,7 +42,9 @@
 <body>
   <div class="step-container">
     <h3>Image Download Process</h3>
-    
+    <img src="https://drive.google.com/file/d/1JDcah7kony_NcUXJLpCJd8e7R2c6_bKC/view" alt="">
+    <img src="https://drive.usercontent.google.com/download?id=1JDcah7kony_NcUXJLpCJd8e7R2c6_bKC&export=view&authuser=0" alt="ssss">
+
     <!-- Step Indicator -->
     <div class="step-indicator">
       <div class="step-indicator-item active" data-step="1">
@@ -153,14 +155,14 @@
         
         // Show progress bar and start at 100%
         progressContainer.style.display = 'block';
-        progressBar.style.width = '100%';
+        progressBar.style.width = '10%';
         progressText.textContent = 'Processing...';
         downloadBtn.disabled = true;
         
-        // Start the progress animation (100% to 50%)
-        let progress = 100;
+        // Start the progress animation (10% to 100%)
+        let progress = 10;
         progressInterval = setInterval(() => {
-          progress = Math.max(50, progress - 1);
+          progress = Math.max(50, progress + 1);
           progressBar.style.width = `${progress}%`;
           progressText.textContent = `Processing... ${progress}%`;
         }, 100);
@@ -290,6 +292,7 @@
             savedImages.forEach(img => {
               const imgElement = document.createElement('img');
               imgElement.src = img.image;
+              console.log(img.image);
               imgElement.dataset.id = img.id;
               
               imgElement.addEventListener('click', function() {
