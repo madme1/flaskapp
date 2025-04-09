@@ -106,7 +106,9 @@
         <div class="step step4">
           <!-- Step 1: Logo Position Selection -->
           <div class="position-step" id="logoPositionStep">
-            <h3>Step 1: Logo Position</h3>
+            <h3 class="position-step-heading">Step 1: Logo Position</h3>
+       
+   
             <div class="position-controls">
               <button id="selectLogoPosition">Select Logo Position</button>
               <button id="resetLogoPosition">Reset Logo Position</button>
@@ -119,12 +121,16 @@
               <button id="logoLeft">←</button>
               <button id="logoRight">→</button>
             </div>
-            <button class="next-step" data-next="nameMobilePositionStep">Next: Name + Mobile</button>
+            <div class="position-control-box">
+              <button class="next-step" data-next="nameMobilePositionStep">Next: Name + Mobile</button>
+            </div>
           </div>
         
           <!-- Step 2: Name + Mobile Position Selection -->
           <div class="position-step" id="nameMobilePositionStep" style="display:none;">
-            <h3>Step 2: Name + Mobile Position</h3>
+            <h3 class="position-step-heading">Step 2: Name + Mobile Position</h3>
+          
+   
             <div class="position-controls">
               <button id="selectNameMobilePosition">Select Name + Mobile Position</button>
               <button id="resetNameMobilePosition">Reset Name + Mobile Position</button>
@@ -137,13 +143,17 @@
               <button id="nameMobileLeft">←</button>
               <button id="nameMobileRight">→</button>
             </div>
-            <button class="prev-step" data-prev="logoPositionStep">Back</button>
-            <button class="next-step" data-next="mahaRaraPositionStep">Next: Maha Rara</button>
+            <div class="position-control-box">
+              <button class="prev-step" data-prev="logoPositionStep">Back</button>
+              <button class="next-step" data-next="mahaRaraPositionStep">Next: Maha Rara</button>
+            </div>
           </div>
         
           <!-- Step 3: Maha Rara Position Selection -->
           <div class="position-step" id="mahaRaraPositionStep" style="display:none;">
-            <h3>Step 3: Maha Rara Position</h3>
+            <h3 class="position-step-heading">Step 3: Maha Rara Position</h3>
+   
+   
             <div class="position-controls">
               <button id="selectMahaRaraPosition">Select Maha Rara Position</button>
               <button id="resetMahaRaraPosition">Reset Maha Rara Position</button>
@@ -156,13 +166,15 @@
               <button id="mahaRaraLeft">←</button>
               <button id="mahaRaraRight">→</button>
             </div>
-            <button class="prev-step" data-prev="nameMobilePositionStep">Back</button>
-            <button id="finishPositioning">Finish</button>
+            <div class="position-control-box">
+              <button class="prev-step" data-prev="nameMobilePositionStep">Back</button>
+              <button id="finishPositioning">Finish</button>
+            </div>
           </div>
         
           <!-- Quick reset option -->
           <div class="quick-reset">
-            <button id="resetAllPositions">Reset All Positions</button>
+            <!-- <button id="resetAllPositions">Reset All Positions</button> -->
           </div>
         </div>
           <!-- <button id="previewButton">Preview Text</button> -->
