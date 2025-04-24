@@ -1,21 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Saved Images</title>
-  <link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='saved_image.css') }}"
-/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='saved_image.css') }}" />
   <style>
-    /* Add these styles for the progress bar */
     .progress-container {
       display: none;
       width: 100%;
       margin: 20px 0;
     }
-    
+
     .progress-bar {
       width: 100%;
       height: 20px;
@@ -23,27 +19,41 @@
       border-radius: 10px;
       overflow: hidden;
     }
-    
+
     .progress {
       height: 100%;
       background-color: #4CAF50;
       width: 0%;
       transition: width 0.3s ease;
     }
-    
+
     .progress-text {
       text-align: center;
       margin-top: 5px;
       font-size: 14px;
       color: #555;
     }
+
+    .image-container img {
+      width: 150px;
+      margin: 10px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .image-container img:hover {
+      transform: scale(1.05);
+    }
+
+    .image-container img.selected {
+      border: 3px solid #4CAF50;
+      box-shadow: 0 0 10px #4CAF50;
+    }
   </style>
 </head>
 <body>
   <div class="step-container">
     <h3>Image Download Process</h3>
-    
-    <!-- Step Indicator -->
     <div class="step-indicator">
       <div class="step-indicator-item active" data-step="1">
         <span>Enter Details</span>
@@ -52,46 +62,40 @@
         <span>Select & Download</span>
       </div>
     </div>
-    
-    <!-- Step 1: Enter Details -->
+
     <div class="step step1 active">
       <div id="editForm">
         <h2>Enter Your Details</h2>
-        <input type="text" id="editName" placeholder="Name" required>
-        <input type="text" id="editMobile" placeholder="Mobile" required>
-        <input type="text" id="editMahaRara" placeholder="Maha Rara No." required>
-        <input type="file" id="editLogoUpload" accept="image/*">
+        <input type="text" id="editName" placeholder="Name" required />
+        <input type="text" id="editMobile" placeholder="Mobile" required />
+        <input type="text" id="editMahaRara" placeholder="Maha Rara No." required />
+        <input type="file" id="editLogoUpload" accept="image/*" />
       </div>
-      
       <div class="nav-buttons">
         <button class="nav-next">Next</button>
       </div>
     </div>
-    
-    <!-- Step 2: Select Image -->
+
     <div class="step step2">
-      <h2>Select an Image to Download</h2>
-      <div class="image-container" id="savedImagesContainer">
-        <!-- Saved images will be dynamically loaded here -->
-      </div>
-      
-      <!-- Progress bar container -->
+      <h2>Select Images to Download</h2>
+      <div class="image-container" id="savedImagesContainer"></div>
+
       <div class="progress-container" id="progressContainer">
         <div class="progress-bar">
           <div class="progress" id="progressBar"></div>
         </div>
         <div class="progress-text" id="progressText">0%</div>
       </div>
-      
+
       <div class="nav-buttons">
         <button class="nav-prev">Previous</button>
-        <button class="nav-download" disabled>Download Selected Image</button>
+        <button class="nav-download" disabled>Download Selected Images</button>
       </div>
     </div>
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const steps = document.querySelectorAll('.step');
       const stepIndicators = document.querySelectorAll('.step-indicator-item');
       const prevBtn = document.querySelector('.nav-prev');
@@ -100,71 +104,43 @@
       const progressContainer = document.getElementById('progressContainer');
       const progressBar = document.getElementById('progressBar');
       const progressText = document.getElementById('progressText');
-      
+
       let currentStep = 1;
-      let selectedImageId = null;
-      let progressInterval;
-      
-      // Initialize the form
+      let selectedImageIds = [];
+
       updateStepVisibility();
-      
-      // Next button click handler
-      nextBtn.addEventListener('click', function() {
-        // Validate step 1 fields before proceeding
-        if (currentStep === 1) {
-          const name = document.getElementById('editName').value;
-          const mobile = document.getElementById('editMobile').value;
-          const mahaRaraNo = document.getElementById('editMahaRara').value;
-          
-          if (!name || !mobile || !mahaRaraNo) {
-            alert('Please enter all required fields: name, mobile number, and Maha Rara No.');
-            return;
-          }
-          
-          // Load images for step 2
-          fetchSavedImages();
-        }
-        
-        if (currentStep < steps.length) {
-          currentStep++;
-          updateStepVisibility();
-        }
-      });
-      
-      // Previous button click handler
-      prevBtn.addEventListener('click', function() {
-        if (currentStep > 1) {
-          currentStep--;
-          updateStepVisibility();
-        }
-      });
-      
-      // Download button click handler
-      downloadBtn.addEventListener('click', async function() {
-        if (!selectedImageId) {
-          alert('Please select an image to download');
+
+      nextBtn.addEventListener('click', function () {
+        const name = document.getElementById('editName').value;
+        const mobile = document.getElementById('editMobile').value;
+        const mahaRaraNo = document.getElementById('editMahaRara').value;
+
+        if (!name || !mobile || !mahaRaraNo) {
+          alert('Please fill in all fields.');
           return;
         }
-        
+
+        fetchSavedImages();
+        currentStep++;
+        updateStepVisibility();
+      });
+
+      prevBtn.addEventListener('click', function () {
+        currentStep--;
+        updateStepVisibility();
+      });
+
+      downloadBtn.addEventListener('click', async function () {
         const name = document.getElementById('editName').value;
         const mobile = document.getElementById('editMobile').value;
         const mahaRaraNo = document.getElementById('editMahaRara').value;
         const logoFile = document.getElementById('editLogoUpload').files[0];
-        
-        // Show progress bar and start at 100%
-        progressContainer.style.display = 'block';
-        progressBar.style.width = '10%';
-        progressText.textContent = 'Processing...';
-        downloadBtn.disabled = true;
-        
-        // Start the progress animation (10% to 100%)
-        let progress = 10;
-        progressInterval = setInterval(() => {
-          progress = Math.max(50, progress + 1);
-          progressBar.style.width = `${progress}%`;
-          progressText.textContent = `Processing... ${progress}%`;
-        }, 100);
-        
+
+        if (selectedImageIds.length === 0) {
+          alert('Select at least one image.');
+          return;
+        }
+
         let logoData = null;
         if (logoFile) {
           logoData = await new Promise((resolve) => {
@@ -173,148 +149,94 @@
             reader.readAsDataURL(logoFile);
           });
         }
-        
-        // Send data to backend to edit and download the image
-        try {
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', `/edit/${selectedImageId}`, true);
-          xhr.setRequestHeader('Content-Type', 'application/json');
-          
-          xhr.onload = function() {
-            clearInterval(progressInterval);
-            if (xhr.status === 200) {
-              // Complete the progress bar
-              progressBar.style.width = '100%';
-              progressText.textContent = 'Download complete!';
-              
-              // Create a download link for the response
-              const blob = new Blob([xhr.response], { type: 'image/png' });
-              const url = window.URL.createObjectURL(blob);
-              
+
+        progressContainer.style.display = 'block';
+        downloadBtn.disabled = true;
+
+        for (let i = 0; i < selectedImageIds.length; i++) {
+          const imageId = selectedImageIds[i];
+          progressBar.style.width = `${(i / selectedImageIds.length) * 100}%`;
+          progressText.textContent = `Processing ${i + 1} of ${selectedImageIds.length}`;
+
+          try {
+            const response = await fetch(`/edit/${imageId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name, mobile, maha_rara_no: mahaRaraNo, logo: logoData }),
+            });
+
+            if (response.ok) {
+              const blob = await response.blob();
+              const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.href = url;
-              a.download = 'edited_image.png';
+              a.download = `edited_image_${imageId}.png`;
               document.body.appendChild(a);
               a.click();
               document.body.removeChild(a);
-              
-              // Reset progress after a short delay
-              setTimeout(() => {
-                progressContainer.style.display = 'none';
-                downloadBtn.disabled = false;
-                progressBar.style.width = '0%';
-                progressText.textContent = '0%';
-              }, 2000);
             } else {
-              console.error('Backend error:', xhr.responseText);
-              progressBar.style.backgroundColor = '#f44336';
-              progressText.textContent = 'Error processing image';
-              setTimeout(() => {
-                progressContainer.style.display = 'none';
-                downloadBtn.disabled = false;
-                progressBar.style.backgroundColor = '#4CAF50';
-                progressBar.style.width = '0%';
-                progressText.textContent = '0%';
-              }, 2000);
+              console.error(`Error on image ${imageId}:`, await response.text());
             }
-          };
-          
-          xhr.onerror = function() {
-            clearInterval(progressInterval);
-            console.error('Network error');
-            progressBar.style.backgroundColor = '#f44336';
-            progressText.textContent = 'Network error';
-            setTimeout(() => {
-              progressContainer.style.display = 'none';
-              downloadBtn.disabled = false;
-              progressBar.style.backgroundColor = '#4CAF50';
-              progressBar.style.width = '0%';
-              progressText.textContent = '0%';
-            }, 2000);
-          };
-          
-          xhr.responseType = 'arraybuffer';
-          xhr.send(JSON.stringify({
-            name: name,
-            mobile: mobile,
-            maha_rara_no: mahaRaraNo,
-            logo: logoData,
-          }));
-          
-        } catch (error) {
-          clearInterval(progressInterval);
-          console.error('Error:', error);
-          progressBar.style.backgroundColor = '#f44336';
-          progressText.textContent = 'Error occurred';
-          setTimeout(() => {
-            progressContainer.style.display = 'none';
-            downloadBtn.disabled = false;
-            progressBar.style.backgroundColor = '#4CAF50';
-            progressBar.style.width = '0%';
-            progressText.textContent = '0%';
-          }, 2000);
+          } catch (error) {
+            console.error('Network error:', error);
+          }
         }
+
+        progressBar.style.width = '100%';
+        progressText.textContent = 'All downloads complete!';
+        setTimeout(() => {
+          progressContainer.style.display = 'none';
+          downloadBtn.disabled = false;
+          progressBar.style.width = '0%';
+          progressText.textContent = '0%';
+        }, 2000);
       });
-      
-      // Update step visibility and button states
+
       function updateStepVisibility() {
         steps.forEach((step, index) => {
-          if (index + 1 === currentStep) {
-            step.classList.add('active');
-          } else {
-            step.classList.remove('active');
-          }
+          step.classList.toggle('active', index + 1 === currentStep);
         });
-        
+
         stepIndicators.forEach((indicator, index) => {
-          indicator.classList.remove('active');
-          if (index + 1 === currentStep) {
-            indicator.classList.add('active');
-          }
+          indicator.classList.toggle('active', index + 1 === currentStep);
         });
-        
-        prevBtn.style.display = currentStep === 1 ? 'none' : 'block';
-        nextBtn.style.display = currentStep === steps.length ? 'none' : 'block';
-        downloadBtn.style.display = currentStep === steps.length ? 'block' : 'none';
+
+        prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-block';
+        nextBtn.style.display = currentStep === steps.length ? 'none' : 'inline-block';
+        downloadBtn.style.display = currentStep === steps.length ? 'inline-block' : 'none';
       }
-      
-      // Fetch saved images from the backend
+
       async function fetchSavedImages() {
         try {
           const response = await fetch('/get_saved_images');
-          if (response.ok) {
-            const savedImages = await response.json();
-            const container = document.getElementById('savedImagesContainer');
-            container.innerHTML = ''; // Clear existing content
-            
-            savedImages.forEach(img => {
-              const imgElement = document.createElement('img');
-              imgElement.src = img.image;
-              console.log(img.image);
-              imgElement.dataset.id = img.id;
-              
-              imgElement.addEventListener('click', function() {
-                // Remove selection from all images
-                document.querySelectorAll('.image-container img').forEach(img => {
-                  img.classList.remove('selected');
-                });
-                
-                // Select this image
+          if (!response.ok) throw new Error(await response.text());
+
+          const savedImages = await response.json();
+          const container = document.getElementById('savedImagesContainer');
+          container.innerHTML = '';
+
+          savedImages.forEach(img => {
+            const imgElement = document.createElement('img');
+            imgElement.src = img.image;
+            imgElement.dataset.id = img.id;
+
+            imgElement.addEventListener('click', function () {
+              const id = this.dataset.id;
+              if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                selectedImageIds = selectedImageIds.filter(imgId => imgId !== id);
+              } else {
                 this.classList.add('selected');
-                selectedImageId = this.dataset.id;
-                downloadBtn.disabled = false;
-              });
-              
-              container.appendChild(imgElement);
+                selectedImageIds.push(id);
+              }
+              downloadBtn.disabled = selectedImageIds.length === 0;
             });
-          } else {
-            const error = await response.text();
-            console.error('Backend error:', error);
-            alert('Error fetching saved images. Check console for details.');
-          }
+
+            container.appendChild(imgElement);
+          });
         } catch (error) {
-          console.error('Network error:', error);
-          alert('Network error. Check console for details.');
+          console.error('Error fetching images:', error);
+          alert('Could not load saved images.');
         }
       }
     });
